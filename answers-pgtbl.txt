@@ -1,0 +1,20 @@
+1.
+All of the syscalls that get information about the  process can be made faster 
+by doing the same thing we did here: allocate a permenant address, and a page on startup that is user read-only 
+
+2.
+The first time we call mappages() in exec, is when we call uvmalloc at address 0.
+So, page 0 seems to have the elf headers.
+But, according figure 3-4, it should be the text segment, so it is possible that the ELF header is considered to be part of that.
+
+Next, exec allocated 2 more pages: 1 & 2
+The comments say: 
+
+  // Allocate two pages at the next page boundary.
+  // Make the first inaccessible as a stack guard.
+  // Use the second as the user stack.
+
+so, the first page is not accessible by the user
+and the second is the stack!
+
+according to figure 3-4, the third to last page is the final page of the heap, followed by the second to last page which is the trapframe.
