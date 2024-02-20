@@ -71,12 +71,49 @@ sys_sleep(void)
 
 
 #ifdef LAB_PGTBL
-int
+int 
 sys_pgaccess(void)
 {
-  // lab pgtbl: your code here.
+  uint64 start_addr;
+  int n; 
+  uint64 return_addr;
+
+  argaddr(0, &start_addr);
+  argint(1, &n);
+  argaddr(2, &return_addr);
+
+  unsigned int bit_mask = 0;
+
+  if (n > MAX_PTE){
+    return -1;
+  }
+
+  struct proc *p = myproc();
+  pte_t *current_pte;
+
+  for (int i = 0; i < n; i++){
+    current_pte = walk(p->pagetable, start_addr + i*PGSIZE, 0);
+    // check if the page is valid
+    if (current_pte == 0 || (*current_pte & PTE_V) == 0){
+      return -1;
+    }
+
+    if ((*current_pte & PTE_A)){
+      bit_mask |= 1 << i;
+    }
+
+    *current_pte &= ~PTE_A;
+  }
+
+  if (copyout(p->pagetable, return_addr, (char *)&bit_mask, sizeof(bit_mask)) < 0) {
+    return -1;
+  }
+  
   return 0;
-}
+
+
+  }
+
 #endif
 
 uint64
